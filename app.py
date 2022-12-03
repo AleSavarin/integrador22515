@@ -29,11 +29,19 @@ def storage():
     # Levanto los datos del formulario
     _nombre = request.form['txtNombre']         # por convención el _ es para variables de BBDD
     _correo = request.form['txtCorreo']         #
-    _foto   = request.files['txtFoto']        # es .files porque son archivos
+    _foto   = request.files['txtFoto']          # es .files porque son archivos
+
+    now = datetime.now()                        # tomo el tiempo actual
+    tiempo = now.strftime("%Y%m%d%H%M%S")       # le doy formato año/mes/dia/hora/minuto/segundo
+    # https://www.geeksforgeeks.org/python-strftime-function/
+    
+    if _foto.filename != '':                        # si subió archivo
+        nuevoNombreFoto = tiempo + _foto.filename   # le agrego el timestamp al nombre de la foto
+        _foto.save("uploads/"+nuevoNombreFoto)      # lo guardo en la carpeta uploads
 
     # Hago la consulta SQL
     sql = "INSERT INTO `empleados` (`id`, `nombre`, `correo`, `foto`) VALUES (NULL, %s, %s, %s);"
-    datos =(_nombre, _correo, _foto.filename)   # creo una tupla con los datos
+    datos =(_nombre, _correo, nuevoNombreFoto)   # creo una tupla con los datos
     conn = mysql.connect()      # abro la conexión con la BBDD
     cursor = conn.cursor()      # para que vaya sobre la BBDD
     cursor.execute(sql, datos)  # le paso la consulta SQL y los datos que se copiarán en el %s
