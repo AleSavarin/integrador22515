@@ -18,7 +18,15 @@ mysql.init_app(app)             # Para iniciar la conexión.
 
 @app.route('/')                 # Cuando voy al puerto ####/ hago
 def index():
-    return render_template('empleados/index.html')      # renderizo index.html
+    sql = "SELECT * FROM `empleados`;"      #hago un filtro trayendo todo
+    conn = mysql.connect()      # abro la conexión con la BBDD
+    cursor = conn.cursor()      # para que vaya sobre la BBDD
+    cursor.execute(sql)         # le paso la consulta SQL
+    empleados = cursor.fetchall()       # guardo la consulta en una tupla
+    print(empleados)            # imprimo los datos en consola
+    conn.commit()               # finaliza la acción y actualiza 
+
+    return render_template('empleados/index.html', empleados=empleados)     # Lo renderizo al index
 
 @app.route('/create')
 def create():
