@@ -49,6 +49,7 @@ def storage():
 
     return render_template('empleados/index.html')     # Lo redirijo al index
 
+# Agrego un comentario
 
 # al final hago el punto de entrada a la app
 if __name__ == '__main__':
