@@ -43,6 +43,7 @@ def storage():
     tiempo = now.strftime("%Y%m%d%H%M%S")       # le doy formato año/mes/dia/hora/minuto/segundo
     # https://www.geeksforgeeks.org/python-strftime-function/
     
+    nuevoNombreFoto = ''
     if _foto.filename != '':                        # si subió archivo
         nuevoNombreFoto = tiempo + _foto.filename   # le agrego el timestamp al nombre de la foto
         _foto.save("uploads/"+nuevoNombreFoto)      # lo guardo en la carpeta uploads
@@ -55,7 +56,7 @@ def storage():
     cursor.execute(sql, datos)  # le paso la consulta SQL y los datos que se copiarán en el %s
     conn.commit()               # finaliza la acción y actualiza 
 
-    return render_template('empleados/index.html')     # Lo redirijo al index
+    return redirect('/')     # Lo redirijo al index
 
 @app.route('/destroy/<int:id>')
 def destroy(id):
