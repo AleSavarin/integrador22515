@@ -1,5 +1,5 @@
 from flask import Flask                 # para utilizar el FrameWork
-from flask import render_template       # renderizar los templates
+from flask import render_template, redirect       # renderizar los templates y recargar la ruta
 from flask import request               # para que se pueda ejecutar el submit del formulario
 from flaskext.mysql import MySQL        # para ejecutar consultas SQL
 from datetime import datetime           # para manejar "timestamp"
@@ -23,7 +23,7 @@ def index():
     cursor = conn.cursor()      # para que vaya sobre la BBDD
     cursor.execute(sql)         # le paso la consulta SQL
     empleados = cursor.fetchall()       # guardo la consulta en una tupla
-    print(empleados)            # imprimo los datos en consola
+    #print(empleados)            # imprimo los datos en consola
     conn.commit()               # finaliza la acción y actualiza 
 
     return render_template('empleados/index.html', empleados=empleados)     # Lo renderizo al index
@@ -56,6 +56,46 @@ def storage():
     conn.commit()               # finaliza la acción y actualiza 
 
     return render_template('empleados/index.html')     # Lo redirijo al index
+
+@app.route('/destroy/<int:id>')
+def destroy(id):
+    conn = mysql.connect()      # abro la conexión con la BBDD
+    cursor = conn.cursor()      # para que vaya sobre la BBDD
+    cursor.execute("DELETE FROM empleados WHERE id=%s", (id))  # le paso la consulta SQL y los datos que se copiarán en el %s
+    conn.commit()
+
+    return redirect('/')     # Voy al inicio
+
+@app.route('/edit/<int:id>')
+def edit(id):
+    conn = mysql.connect()      # abro la conexión con la BBDD
+    cursor = conn.cursor()      # para que vaya sobre la BBDD
+    cursor.execute("SELECT * FROM `empleados` WHERE id=%s;",(id))         # le paso la consulta SQL
+    empleados = cursor.fetchall()       # guardo la consulta en una tupla
+    conn.commit()               # finaliza la acción y actualiza 
+
+    return render_template('empleados/edit.html', empleados=empleados)     # Voy al inicio
+
+@app.route('/update', methods=['POST'])
+def update():
+    _id = request.form['txtID']
+    _nombre = request.form['txtNombre']         
+    _correo = request.form['txtCorreo']         
+    _foto   = request.files['txtFoto']
+    #print((_nombre, _correo, _id))
+
+    sql = "UPDATE `empleados` SET nombre=%s, correo=%s WHERE id=%s;"
+
+    conn = mysql.connect()      # abro la conexión con la BBDD
+    cursor = conn.cursor()      # para que vaya sobre la BBDD
+    cursor.execute(sql, (_nombre, _correo, _id))         # le paso la consulta SQL
+    conn.commit()               # finaliza la acción y actualiza 
+
+    return redirect('/')     # Voy al inicio
+
+
+
+
 
 # Agrego un comentario
 
