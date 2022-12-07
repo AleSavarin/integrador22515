@@ -95,9 +95,6 @@ def update():
     return redirect('/')     # Voy al inicio
 
 
-
-
-
 # Agrego un comentario
 
 # al final hago el punto de entrada a la app
