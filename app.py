@@ -3,6 +3,8 @@ from flask import render_template, redirect       # renderizar los templates y r
 from flask import request               # para que se pueda ejecutar el submit del formulario
 from flaskext.mysql import MySQL        # para ejecutar consultas SQL
 from datetime import datetime           # para manejar "timestamp"
+import os                               # para manejar archivos
+from flask import send_from_directory   # para acceder a archivos
 
 app = Flask(__name__)                   # mi app va a ser de Flask y por costumbre se utiliza __name__
 
@@ -14,6 +16,9 @@ app.config['MYSQL_DATABASE_PASSWORD']=''            # Creo que no puse contrase�
 app.config['MYSQL_DATABASE_DB']='sistema22515'      # Nombre de la BBDD
 
 mysql.init_app(app)             # Para iniciar la conexión.
+
+CARPETA = os.path.join('uploads')                   # Elijo la ubicación
+app.config['CARPETA']=CARPETA
 
 
 @app.route('/')                 # Cuando voy al puerto ####/ hago
@@ -56,12 +61,19 @@ def storage():
     cursor.execute(sql, datos)  # le paso la consulta SQL y los datos que se copiarán en el %s
     conn.commit()               # finaliza la acción y actualiza 
 
-    return redirect('/')     # Lo redirijo al index
+    return redirect('/')        # Lo redirijo al index
 
 @app.route('/destroy/<int:id>')
 def destroy(id):
     conn = mysql.connect()      # abro la conexión con la BBDD
     cursor = conn.cursor()      # para que vaya sobre la BBDD
+
+    # Borrar foto actual
+    cursor.execute("SELECT foto FROM empleados WHERE id =%s", id)
+    fila = cursor.fetchone()                    # devuelve una tupla 
+    os.remove(os.path.join(CARPETA, fila[0]))              # elimino la foto
+
+    # Borrar el registro
     cursor.execute("DELETE FROM empleados WHERE id=%s", (id))  # le paso la consulta SQL y los datos que se copiarán en el %s
     conn.commit()
 
@@ -89,13 +101,28 @@ def update():
 
     conn = mysql.connect()      # abro la conexión con la BBDD
     cursor = conn.cursor()      # para que vaya sobre la BBDD
+    if _foto.filename != '':
+        now = datetime.now()                        # tomo el tiempo actual
+        tiempo = now.strftime("%Y%m%d%H%M%S")       # le doy formato año/mes/dia/hora/minuto/segundo
+        nuevoNombreFoto = tiempo + _foto.filename   # le agrego el timestamp al nombre de la foto
+        _foto.save("uploads/"+nuevoNombreFoto)      # lo guardo en la carpeta uploads
+
+        # Para borrar la foto actual
+        cursor.execute("SELECT foto FROM empleados WHERE id =%s", _id)
+        fila = cursor.fetchone()                    # devuelve una tupla 
+        os.remove(os.path.join(CARPETA, fila[0]))              # elimino la foto
+        cursor.execute("UPDATE `empleados` SET foto=%s WHERE id=%s;",(nuevoNombreFoto, _id))
+        conn.commit()
+
     cursor.execute(sql, (_nombre, _correo, _id))         # le paso la consulta SQL
     conn.commit()               # finaliza la acción y actualiza 
 
     return redirect('/')     # Voy al inicio
 
+@app.route('/uploads/<nombreFoto>')
+def muestraFoto(nombreFoto):
+    return send_from_directory(CARPETA, nombreFoto)
 
-# Agrego un comentario
 
 # al final hago el punto de entrada a la app
 if __name__ == '__main__':
