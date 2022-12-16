@@ -21,6 +21,18 @@ CARPETA = os.path.join('uploads')                   # Elijo la ubicación
 app.config['CARPETA']=CARPETA
 
 
+# FUNCIONES
+def queryMySQL(query, data=()):            #  Por si no paso datos, toma tupla nula por defecto
+    conn=mysql.connect()
+    cursor=conn.cursor()
+    if len(data) > 0:
+        cursor.execute(query,data)         # Para INSERT y UPDATE
+    else:
+        cursor.execute(query)
+
+    conn.commit()
+
+
 @app.route('/')                 # Cuando voy al puerto ####/ hago
 def index():
     sql = "SELECT * FROM `empleados`;"      #hago un filtro trayendo todo
@@ -56,10 +68,8 @@ def storage():
     # Hago la consulta SQL
     sql = "INSERT INTO `empleados` (`id`, `nombre`, `correo`, `foto`) VALUES (NULL, %s, %s, %s);"
     datos =(_nombre, _correo, nuevoNombreFoto)   # creo una tupla con los datos
-    conn = mysql.connect()      # abro la conexión con la BBDD
-    cursor = conn.cursor()      # para que vaya sobre la BBDD
-    cursor.execute(sql, datos)  # le paso la consulta SQL y los datos que se copiarán en el %s
-    conn.commit()               # finaliza la acción y actualiza 
+
+    queryMySQL(sql,datos)
 
     return redirect('/')        # Lo redirijo al index
 
@@ -71,12 +81,15 @@ def destroy(id):
     # Borrar foto actual
     cursor.execute("SELECT foto FROM empleados WHERE id =%s", id)
     fila = cursor.fetchone()                    # devuelve una tupla 
-    os.remove(os.path.join(CARPETA, fila[0]))              # elimino la foto
+    try:
+        os.remove(os.path.join(CARPETA, fila[0]))              # elimino la foto
+    except:
+        pass                    # Ejecutar en caso que falle
 
     # Borrar el registro
     cursor.execute("DELETE FROM empleados WHERE id=%s", (id))  # le paso la consulta SQL y los datos que se copiarán en el %s
     conn.commit()
-
+    
     return redirect('/')     # Voy al inicio
 
 @app.route('/edit/<int:id>')
@@ -110,7 +123,10 @@ def update():
         # Para borrar la foto actual
         cursor.execute("SELECT foto FROM empleados WHERE id =%s", _id)
         fila = cursor.fetchone()                    # devuelve una tupla 
-        os.remove(os.path.join(CARPETA, fila[0]))              # elimino la foto
+        try:
+            os.remove(os.path.join(CARPETA, fila[0]))              # elimino la foto
+        except:
+            pass                # Ejecutar algo si la foto no existe
         cursor.execute("UPDATE `empleados` SET foto=%s WHERE id=%s;",(nuevoNombreFoto, _id))
         conn.commit()
 
